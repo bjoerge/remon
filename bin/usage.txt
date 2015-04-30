@@ -1,0 +1,12 @@
+  Usage: relegate [options] <script.js>
+
+  Options:
+
+    -h, --help            output usage information
+    -v, --version         output the version number
+
+    --checker, -c <name>  use the given checker strategy. Defaults to
+                          "require", which detects changes in require.cache.
+
+    --require, -r <name>  require the given module. Useful when you want to
+                          include a require hook for transpilers, etc.
