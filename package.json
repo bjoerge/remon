@@ -1,6 +1,6 @@
 {
   "name": "relegate",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "A reload proxy for development",
   "main": "index.js",
   "bin": {
