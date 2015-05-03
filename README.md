@@ -1,20 +1,28 @@
 # Relegate
 
-Reload proxy for node based web apps.
+A development reload proxy for node based web apps.
 
-Puts your node web server behind a proxy, and restarts it when source files has changed.
+Disclaimer: Even though `relegate` has been tested on multiple large-ish projects, it is still alpha and likely to be a bit unstable. Feel free to open an issue if you run into trouble.
 
-`relegate` is alpha and likely to be a bit unstable at the moment. Feel free to open an issue if you run into trouble.
+# How it works:
+
+- You start your app with `relegate <your-script.js>`
+- A master process is started
+- Your script is then spawned in a child process
+- Whenever you somewhere in `your-script` calls `httpServer.listen(<port>)`, `<port>` will be replaced with a random port
+- The master process binds a http proxy on  `<port>` instead, forwarding requests to the random port instead
+- On each incoming request, the master process will tell the child process to check for changes since previous request (using one or more change detectors, more about that here)
+- If a change is detected, the incoming request is put on hold while the child process is restarted
 
 # Why?
 
-Existing tools usually doesn't work that well with OSX due to compatibility issues with `fs.watch` and
-therefore falls back to polling the filesystem for changes. This means they are slower at picking up changes than they need to be, and puts a higher than necessary load on the CPU for large projects.
+Existing file watching tools has a lot of issues with due to compatibility problems with`fs.watch` and
+therefore falls back to polling the filesystem for changes. This means they are slower at picking up changes than they need to be, and puts a higher load than necessary on the CPU in large projects.
 
 This problem is really painful when you hit the reload button before the file change is detected, and the server serves
 you the old version when the new version is what you'd expect.
 
-If you hit reload before the server is completely restarted, one of these *three* things may happen:
+Furthermore, if you hit reload before the server is completely restarted, one of these *three* things may happen:
 
 1. The request is processed and completed *before* the monitor has even detected that the change occurred. You will get the previous version, not the new as you would expect.
 2. The request is *partially* processed before changes are detected, and you may end up with a broken page where the HTML may be served, but remaining requests for other resources (js/css) may be aborted by the restarting server.
@@ -22,16 +30,31 @@ If you hit reload before the server is completely restarted, one of these *three
 
 In my own experience, I end up hitting reload approximately three times before the server is finally restarted.
 
-* `relegate` checks require.cache at *incoming* requests to see if any of the loaded files has changed since the previous request.
+* `relegate` overcomes this by checking for changes at *incoming* requests to see if anything has changed since the previous request.
 
 * if a change is detected it will puts any incoming request on hold until the app is fully restarted and ready to handle the request.
+
+
+# Change detectors
+
+A change detector is simply a strategy that detects if any files has changed since last check was issued.
+
+The default change detector is `require` which taps into require.cache and  
+
+
+It is implemented as a function with the signature 
 
 # Assumptions / current limitations
 
 * Your app will run in a single child process. It will probably not play well with the cluster module.
 
-* Only files in require.cache will trigger a full reload of the app. Static files, resources, etc. should be served as-is
- or bundled on the fly.
+* There are currently no provided strategy for detecting changes in other files than those loaded via require("filename"). 
+  Strategies to deal with static files, resources, etc. is future work.
+
+# Gotchas
+
+Relegate works by monkey patching `http.createServer` and `HttpServer.listen`. Keep this in mind if you run into 
+weird http related issues.
 
 # Usage
 
@@ -40,20 +63,22 @@ In my own experience, I end up hitting reload approximately three times before t
 
   Options:
 
-    -h, --help            output usage information
-    -v, --version         output the version number
+    --help ,    -h        Output usage information
+    --version,  -v        Output the version number
 
-    --checker, -c <name>  use the given checker strategy. Defaults to
+    --detector, -d <name> Use the given change detector. Defaults to
                           "require", which detects changes in require.cache.
+                          Specify multiple change detectors with
+                          -d <cd> -d <other cd>
 
-    --require, -r <name>  require the given module. Useful when you want to
+    --require, -r <name>  Require the given module. Useful when you want to
                           include a require hook for transpilers, etc.
 ```
 
 # Babel, CoffeeScript, etc.
 
 Usage with [Babel](http://babeljs.io) or coffee-script is as simple as require-ing the require hook:
-  
+
 ```
 relegate -r babel/register myscript.js
 ```
