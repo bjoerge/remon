@@ -3,6 +3,10 @@
   "version": "0.0.1",
   "description": "A development reload proxy for node based web apps.",
   "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bjoerge/relegate.git"
+  },
   "bin": {
     "relegate": "./bin/relegate.js"
   },
