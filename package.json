@@ -28,6 +28,7 @@
     "coffee-script": "^1.9.2",
     "dev-error-handler": "^0.1.4",
     "express": "^4.12.3",
+    "standard": "^3.7.2",
     "quickreload": "^1.0.3"
   },
   "standard": {
