@@ -1,6 +1,6 @@
 {
   "name": "relegate",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A development reload proxy for node based web apps.",
   "main": "index.js",
   "repository": {
