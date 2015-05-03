@@ -9,7 +9,7 @@ var argv = subarg(process.argv.slice(2), {
   alias: {
     h: 'help',
     r: 'require',
-    c: 'checker'
+    d: 'detector'
   }
 });
 
@@ -29,7 +29,7 @@ if (!argv._[0]) {
 }
 
 const cwd = process.cwd();
-module.paths.push(cwd, path.join(cwd, 'node_modules'), path.join(__dirname, '../', 'checkers'));
+module.paths.push(cwd, path.join(cwd, 'node_modules'), path.join(__dirname, '../', 'detectors'));
 
 function resolveModule(mod) {
   if (fs.existsSync(mod) || fs.existsSync(mod+'.js')) {
@@ -44,15 +44,15 @@ function resolveModule(mod) {
 // Todo: find a better way to pass config down to delegate
 var isDelegate = process.env.DELEGATE;
 if (isDelegate) {
-  var checkers = [].concat(argv.checker || ['require'])
+  var detectors = [].concat(argv.detector || ['require'])
     .map(function(arg) {
       if (typeof arg === 'object') {
         return {name: arg._[0], opts: arg};
       }
       return {name: arg, opts: {}};
     })
-    .map(function(checker) {
-      return require(resolveModule(checker.name))(checker.opts);
+    .map(function(detector) {
+      return require(resolveModule(detector.name))(detector.opts);
     });
 }
 // make the filename absolute
@@ -64,7 +64,7 @@ if (!pathIsAbsolute(filename)) {
 require("../")({
   filename: filename,
   argv: process.argv,
-  checkers: checkers
+  detectors: detectors
 });
 
 // add back on node and concat the sliced args

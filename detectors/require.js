@@ -1,9 +1,9 @@
 var difference = require('lodash.difference')
-var debug = require('debug')('relegate:checker:require')
+var debug = require('debug')('relegate:detector:require')
 var fs = require('fs')
 var Module = require('module')
 
-// A checker that detects changes in require.cache entries
+// A change detector that detects changes in require.cache entries
 function find (arr, iterator, callback) {
   var done = false
   var pending = arr.length
