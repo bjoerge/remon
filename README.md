@@ -9,18 +9,17 @@ Disclaimer: Even though `relegate` has been tested on multiple large-ish project
 - You start your app with `relegate <your-script.js>`
 - A master process is started
 - Your script is then spawned in a child process
-- Whenever you somewhere in `your-script` calls `httpServer.listen(<port>)`, `<port>` will be replaced with a random port
-- The master process binds a http proxy on  `<port>` instead, forwarding requests to the random port instead
+- Whenever `httpServer.listen(<port>)` is called from `your-script.js`, the `<port>` will be replaced with a random port
+- The master process binds a http proxy on `<port>` instead, forwarding requests to the random port that the child process is bound to.
 - On each incoming request, the master process will tell the child process to check for changes since previous request (using one or more change detectors, more about that here)
 - If a change is detected, the incoming request is put on hold while the child process is restarted
 
 # Why?
 
-Existing file watching tools has a lot of issues with due to compatibility problems with`fs.watch` and
+Existing file watching tools has a lot of issues with due to compatibility problems with `fs.watch` and
 therefore falls back to polling the filesystem for changes. This means they are slower at picking up changes than they need to be, and puts a higher load than necessary on the CPU in large projects.
 
-This problem is really painful when you hit the reload button before the file change is detected, and the server serves
-you the old version when the new version is what you'd expect.
+This problem is really painful when you hit the reload button before the file change is detected, and the server gives you an outdated version that's not what you expect.
 
 Furthermore, if you hit reload before the server is completely restarted, one of these *three* things may happen:
 
@@ -32,18 +31,17 @@ In my own experience, I end up hitting reload approximately three times before t
 
 * `relegate` overcomes this by checking for changes at *incoming* requests to see if anything has changed since the previous request.
 
-* if a change is detected it will puts any incoming request on hold until the app is fully restarted and ready to handle the request.
+* if a change is detected it will put the incoming request on hold until the app is fully restarted and ready to handle the request with the new version of the code.
 
 
 # Change detectors
 
 A change detector is simply a strategy that detects if any files has changed since last check was issued.
 
-The default change detector is `require` which taps into require.cache and checks if any files there has changed since
-the previous check was performed.
+The default change detector is `require` which taps into `require.cache` and checks if any files there has changed since the previous check was performed.
 
-It is implemented as a function which takes an options hash as first parameter and returns a detector function that takes
-a callback. The callback should be invoked with (err, truthy|falsy) depending on whether a change was found or not.
+It is implemented as a function which takes an options hash as first parameter and returns a detector function that takes a callback. The callback should be invoked with (err, truthy|falsy) depending on whether a change was found or not.
+
 For example, this is an implementation of a detector that will make the server restart before each request:
 
 ```js
@@ -53,17 +51,16 @@ module.exports = function always() {
   }
 }
 ```
-# Assumptions / current limitations
+
+# Gotchas
+
+* Relegate works by monkey patching `http.createServer` and `HttpServer.listen`. Keep this in mind if you run into 
+weird http related issues.
 
 * Your app will run in a single child process. It will probably not play well with the cluster module.
 
 * There are currently no provided strategy for detecting changes in other files than those loaded via require("filename"). 
   Strategies to deal with static files, resources, etc. is future work.
-
-# Gotchas
-
-Relegate works by monkey patching `http.createServer` and `HttpServer.listen`. Keep this in mind if you run into 
-weird http related issues.
 
 # Usage
 
