@@ -39,11 +39,20 @@ In my own experience, I end up hitting reload approximately three times before t
 
 A change detector is simply a strategy that detects if any files has changed since last check was issued.
 
-The default change detector is `require` which taps into require.cache and  
+The default change detector is `require` which taps into require.cache and checks if any files there has changed since
+the previous check was performed.
 
+It is implemented as a function which takes an options hash as first parameter and returns a detector function that takes
+a callback. The callback should be invoked with (err, truthy|falsy) depending on whether a change was found or not.
+For example, this is an implementation of a detector that will make the server restart before each request:
 
-It is implemented as a function with the signature 
-
+```js
+module.exports = function always() {
+  return function (callback) {
+    callback(null, true)
+  }
+}
+```
 # Assumptions / current limitations
 
 * Your app will run in a single child process. It will probably not play well with the cluster module.
