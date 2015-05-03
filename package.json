@@ -4,7 +4,7 @@
   "description": "A development reload proxy for node based web apps.",
   "main": "index.js",
   "bin": {
-    "relegate": "./bin/relegate"
+    "relegate": "./bin/relegate.js"
   },
   "scripts": {
     "start": "bin/relegate examples/server.js",
