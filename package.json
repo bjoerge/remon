@@ -7,7 +7,7 @@
     "relegate": "./bin/relegate"
   },
   "scripts": {
-    "start": "bin/relegate --checker require examples/server.js",
+    "start": "bin/relegate examples/server.js",
     "debug": "DEBUG=relegate* npm start",
     "test": "standard"
   },
