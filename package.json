@@ -11,7 +11,7 @@
     "relegate": "./bin/relegate.js"
   },
   "scripts": {
-    "start": "bin/relegate examples/server.js",
+    "start": "bin/relegate.js examples/server.js",
     "debug": "DEBUG=relegate* npm start",
     "test": "standard"
   },
