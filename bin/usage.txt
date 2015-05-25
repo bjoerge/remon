@@ -1,4 +1,4 @@
-  Usage: relegate [options] <script.js>
+  Usage: remon [options] <script.js>
 
   Options:
 

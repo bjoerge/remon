@@ -1,25 +1,52 @@
-# Relegate
+# Remon
 
-A development reload proxy for node based web apps.
+A development tool that restarts your node.js server after code changes
 
-Disclaimer: Even though `relegate` has been tested on multiple large-ish projects, it is still alpha and likely to be a bit unstable. Feel free to open an issue if you run into trouble.
+It differs from other reload tools in that it checks for source file changes on incoming HTTP requests instead of watching the file system.
+Whenever a change is detected, the incoming request is put on hold while the application restarts. When the restart is completed, the incoming request is resumed.
+
+`remon` does not require any configuration or setup, nor does it require you to modify existing code. It doesn't require (often cpu-intensive) file system watching as it just 
+checks for modifications in files/modules that are loaded at runtime.
+
+*Disclaimer*: Even though `remon` has been tested on multiple large-ish projects, it is still alpha and likely to be a bit unstable. Feel free to open an issue if you run into trouble.
+
+# Getting started
+
+```sh
+npm install -g remon 
+```
+
+or if you wish to add it as a dependency to your project:
+
+```sh
+npm install --save-dev remon 
+```
+
+Then start your app with:
+
+```
+remon <your-script.js>
+```
+
+# Automatic reload
+
+`remon` is a perfect fit for [quickreload](http://github.com/bjoerge/quickreload) which will tell the browser to reload when files are changed on disk. [Code example](/tree/master/examples/server.js)
 
 # How it works:
 
-- You start your app with `relegate <your-script.js>`
+- You start your app with `remon <your-script.js>`
 - A master process is started
 - Your script is then spawned in a child process
 - Whenever `httpServer.listen(<port>)` is called from `your-script.js`, the `<port>` will be replaced with a random port
 - The master process binds a http proxy on `<port>` instead, forwarding requests to the random port that the child process is bound to.
-- On each incoming request, the master process will tell the child process to check for changes since previous request (using one or more change detectors, more about that here)
-- If a change is detected, the incoming request is put on hold while the child process is restarted
+- On each incoming request, the master process will tell the child process to check for changes since previous request (using one or more change detectors, [more about that here](#change-detectors))
+- If a change is detected, the incoming request is put on hold while the child process is restarted and resumed when the child process is up running again.
 
 # Why?
 
-Existing file watching tools has a lot of issues with due to compatibility problems with `fs.watch` and
-therefore falls back to polling the filesystem for changes. This means they are slower at picking up changes than they need to be, and puts a higher load than necessary on the CPU in large projects.
+Existing file watching tools has a lot of issues with due to compatibility problems with `fs.watch` and therefore falls back to polling the filesystem for changes. This means they are slower at picking up changes than they need to be, and puts a higher load than necessary on the CPU in large projects.
 
-This problem is really painful when you hit the reload button before the file change is detected, and the server gives you an outdated version that's not what you expect.
+This problem is really painful when you hit the reload button just in time before the file change is detected, and the server unexpectedly gives you an outdated version.
 
 Furthermore, if you hit reload before the server is completely restarted, one of these *three* things may happen:
 
@@ -29,20 +56,21 @@ Furthermore, if you hit reload before the server is completely restarted, one of
 
 In my own experience, I end up hitting reload approximately three times before the server is finally restarted.
 
-* `relegate` overcomes this by checking for changes at *incoming* requests to see if anything has changed since the previous request.
+* `remon` overcomes this by checking for changes at *incoming* requests to see if anything has changed since the previous request.
 
 * if a change is detected it will put the incoming request on hold until the app is fully restarted and ready to handle the request with the new version of the code.
 
 
 # Change detectors
 
-A change detector is simply a strategy that detects if any files has changed since last check was issued.
+A change detector is simply a strategy that detects if any files has changed since the previous check was done.
 
-The default change detector is `require` which taps into `require.cache` and checks if any files there has changed since the previous check was performed.
+The default change detector is `require` which taps into `require.cache` and checks the files there for modifications.
 
-It is implemented as a function which takes an options hash as first parameter and returns a detector function that takes a callback. The callback should be invoked with (err, truthy|falsy) depending on whether a change was found or not.
+A change detector is implemented as a function which takes an options hash as first parameter and returns a detector
+function that again takes a callback. This callback should be invoked with (err, truthy|falsy) depending on whether a change was found or not.
 
-For example, this is an implementation of a detector that will make the server restart before each request:
+For example, here's an implementation of a detector that will always report true, and thus make the server restart before each request:
 
 ```js
 module.exports = function always() {
@@ -54,8 +82,10 @@ module.exports = function always() {
 
 # Gotchas
 
-* Relegate works by monkey patching `http.createServer` and `HttpServer.listen`. Keep this in mind if you run into 
+* Remon works by monkey patching `http.createServer` and `HttpServer.listen`. Keep this in mind if you run into 
 weird http related issues.
+
+* If you read static files (i.e. non-require()-d files) into memory on app startup, changes in these files will not be detected. A change detector that deals with this scenario is planned.
 
 * Your app will run in a single child process. It will probably not play well with the cluster module.
 
@@ -65,7 +95,7 @@ weird http related issues.
 # Usage
 
 ```
-  Usage: relegate [options] <script.js>
+  Usage: remon [options] <script.js>
 
   Options:
 
@@ -86,11 +116,11 @@ weird http related issues.
 Usage with [Babel](http://babeljs.io) or coffee-script is as simple as require-ing the require hook:
 
 ```
-relegate -r babel/register myscript.js
+remon -r babel/register myscript.js
 ```
 
 Or:
 
 ```
-relegate -r coffee-script/register myscript.coffee
+remon -r coffee-script/register myscript.coffee
 ```

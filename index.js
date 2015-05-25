@@ -1,4 +1,4 @@
-var debug = require('debug')('relegate:main')
+var debug = require('debug')('remon:main')
 module.exports = function (options) {
   var isDelegate = process.env.DELEGATE
   debug('Initializing %s', isDelegate ? 'delegate' : 'master')

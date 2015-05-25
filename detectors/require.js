@@ -1,5 +1,5 @@
 var difference = require('lodash.difference')
-var debug = require('debug')('relegate:detector:require')
+var debug = require('debug')('remon:detector:require')
 var fs = require('fs')
 var Module = require('module')
 
