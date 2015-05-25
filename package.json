@@ -1,6 +1,6 @@
 {
   "name": "remon",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "A development tool that restarts your node.js server after code changes",
   "main": "index.js",
   "repository": {
