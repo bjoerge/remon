@@ -30,7 +30,7 @@ remon <your-script.js>
 
 # Automatic reload
 
-`remon` is a perfect fit for [quickreload](http://github.com/bjoerge/quickreload) which will tell the browser to reload when files are changed on disk. [Code example](/tree/master/examples/advanced/server.js)
+`remon` is a perfect fit for [quickreload](http://github.com/bjoerge/quickreload) which will tell the browser to reload when files are changed on disk. [Code example](https://github.com/bjoerge/remon/edit/master/README.md)
 
 # How it works:
 
