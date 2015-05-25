@@ -2,7 +2,7 @@
 
 A development tool that restarts your node.js server after code changes
 
-It differs from other reload tools in that it checks for source file changes on incoming HTTP requests instead of watching the file system.
+It differs from other reload tools in that instead of watching the file system, it checks for source file changes on incoming HTTP requests.
 Whenever a change is detected, the incoming request is put on hold while the application restarts. When the restart is completed, the incoming request is resumed.
 
 `remon` does not require any configuration or setup, nor does it require you to modify existing code. It doesn't require (often cpu-intensive) file system watching as it just 
